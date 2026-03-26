@@ -18,9 +18,12 @@ public interface IArgument
     /// <summary>Gets a value indicating whether this argument must be supplied by the caller.</summary>
     bool IsRequired { get; }
 
+    /// <summary>Gets a value indicating whether an explicit default has been defined for this argument.</summary>
+    bool HasDefault { get; }
+
     /// <summary>
     /// Gets the untyped default value used when the argument is not supplied,
-    /// or <see langword="null"/> when no default is defined.
+    /// or <see langword="null"/> when no default is defined (i.e. <see cref="HasDefault"/> is <see langword="false"/>).
     /// </summary>
     object? DefaultValue { get; }
 }

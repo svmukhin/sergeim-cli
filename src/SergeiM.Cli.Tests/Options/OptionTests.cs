@@ -29,9 +29,26 @@ public class OptionTests
     [TestMethod]
     public void Constructor_WithDefaultValue_ExposesTypedAndUntypedDefault()
     {
-        var option = new Option<int>("--count", "Count", defaultValue: 42);
+        var option = new Option<int>("--count", "Count", false, 42);
+        Assert.IsTrue(option.HasDefault);
         Assert.AreEqual(42, option.Default);
         Assert.AreEqual(42, option.DefaultValue);
+    }
+
+    [TestMethod]
+    public void Constructor_WithoutDefaultValue_HasDefaultIsFalse()
+    {
+        var option = new Option<string>("--name", "A name");
+        Assert.IsFalse(option.HasDefault);
+        Assert.IsNull(option.DefaultValue);
+    }
+
+    [TestMethod]
+    public void Constructor_BoolWithoutDefault_HasDefaultIsFalseAndDefaultValueIsNull()
+    {
+        var option = new Option<bool>("--verbose", "Verbose");
+        Assert.IsFalse(option.HasDefault);
+        Assert.IsNull(option.DefaultValue);
     }
 
     [TestMethod]

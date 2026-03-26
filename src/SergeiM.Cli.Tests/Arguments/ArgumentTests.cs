@@ -28,8 +28,17 @@ public class ArgumentTests
     public void Constructor_WithDefaultValue_ExposesTypedAndUntypedDefault()
     {
         var arg = new Argument<int>("<count>", "Count", defaultValue: 1);
+        Assert.IsTrue(arg.HasDefault);
         Assert.AreEqual(1, arg.Default);
         Assert.AreEqual(1, arg.DefaultValue);
+    }
+
+    [TestMethod]
+    public void Constructor_WithoutDefaultValue_HasDefaultIsFalse()
+    {
+        var arg = new Argument<string>("<file>", "File");
+        Assert.IsFalse(arg.HasDefault);
+        Assert.IsNull(arg.DefaultValue);
     }
 
     [TestMethod]

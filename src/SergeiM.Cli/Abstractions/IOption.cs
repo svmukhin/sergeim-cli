@@ -24,9 +24,12 @@ public interface IOption
     /// <summary>Gets a value indicating whether this option must be supplied by the caller.</summary>
     bool IsRequired { get; }
 
+    /// <summary>Gets a value indicating whether an explicit default has been defined for this option.</summary>
+    bool HasDefault { get; }
+
     /// <summary>
     /// Gets the untyped default value used when the option is not supplied,
-    /// or <see langword="null"/> when no default is defined.
+    /// or <see langword="null"/> when no default is defined (i.e. <see cref="HasDefault"/> is <see langword="false"/>).
     /// </summary>
     object? DefaultValue { get; }
 }
