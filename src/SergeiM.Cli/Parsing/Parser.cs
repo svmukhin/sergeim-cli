@@ -69,7 +69,7 @@ public sealed class Parser : IParser
         var command = currentNode as ICommand;
         var argPos = 0;
         var pastEoo = false;
-        if (currentNode is IBranch)
+        if (currentNode is IBranch and not ICommand)
             errors.Add(new ParseError($"No subcommand specified for '{currentNode.Name}'. Run with --help for usage."));
         for (var i = 0; i < tokens.Length; i++)
         {
