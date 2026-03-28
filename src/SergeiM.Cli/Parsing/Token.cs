@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Copyright (c) 2026 Sergei Mukhin
+// SPDX-License-Identifier: MIT
+
 namespace SergeiM.Cli.Parsing;
 
 /// <summary>Classifies a raw command-line argument token.</summary>

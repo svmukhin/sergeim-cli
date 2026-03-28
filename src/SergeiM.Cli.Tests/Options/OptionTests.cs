@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Copyright (c) 2026 Sergei Mukhin
+// SPDX-License-Identifier: MIT
+
 using SergeiM.Cli.Options;
 
 namespace SergeiM.Cli.Tests.Options;
