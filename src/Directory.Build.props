@@ -12,7 +12,8 @@
         <VersionSuffix />
     </PropertyGroup>
     <PropertyGroup>
-        <ArtifactsPath>$(MSBuildThisFileDirectory).artifacts\</ArtifactsPath>
-        <PublishDir>$(MSBuildThisFileDirectory).artifacts\publish\</PublishDir>
+        <SolutionDir Condition="'$(SolutionDir)'==''">$(MSBuildThisFileDirectory)</SolutionDir>
+        <ArtifactsPath>$(SolutionDir).artifacts\</ArtifactsPath>
+        <PublishDir>$(SolutionDir).artifacts\publish\</PublishDir>
     </PropertyGroup>
 </Project>
