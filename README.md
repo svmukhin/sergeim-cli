@@ -1,4 +1,225 @@
-# SERGEIM-CLI
+# SergeiM.Cli
 
-The sergeim-cli library provides functionality commonly needed by command-line
-apps, such as parsing command-line input and displaying help text.
+An object-oriented .NET 8 library for building command-line applications.
+No static classes. No magic strings. Interfaces all the way down.
+
+## Features
+
+- **Tree-based command model** — commands and branches form a typed tree
+- **Strongly-typed options and arguments** — `Option<T>` / `Argument<T>` with
+  built-in type conversion
+- **Inherited options** — options declared on a branch are available to all
+  its subcommands
+- **Auto help** — `--help` / `-h` is injected automatically by `Application`
+- **Decorators over inheritance** — extend behaviour by wrapping `ICommand`
+  / `IBranch`
+- **Exit codes** — `0` success · `1` unhandled exception · `2` parse error
+
+## Installation
+
+```bash
+dotnet add package SergeiM.Cli
+```
+
+## Quick start
+
+```csharp
+using SergeiM.Cli;
+using SergeiM.Cli.Abstractions;
+using SergeiM.Cli.Arguments;
+using SergeiM.Cli.Options;
+
+var nameOpt  = new Option<string>("--name", "-n", "Your name", isRequired: true);
+var countArg = new Argument<int>("<count>", "Number of greetings", defaultValue: 1);
+
+var greetCmd = new GreetCommand(nameOpt, countArg);
+return await new Application(greetCmd).RunAsync(args);
+
+// ---
+
+sealed class GreetCommand(Option<string> nameOpt, Argument<int> countArg) : ICommand
+{
+    public string Name => "greet";
+    public string Description => "Print a greeting.";
+    public IReadOnlyList<IOption> Options => [nameOpt];
+    public IReadOnlyList<IArgument> Arguments => [countArg];
+
+    public Task<int> ExecuteAsync(ICommandContext ctx, CancellationToken ct = default)
+    {
+        var name  = ctx.GetOption(nameOpt)!;
+        var count = ctx.GetArgument(countArg);
+        for (var i = 0; i < count; i++)
+            Console.WriteLine($"Hello, {name}!");
+        return Task.FromResult(0);
+    }
+}
+```
+
+```text
+$ myapp greet --name Alice 3
+Hello, Alice!
+Hello, Alice!
+Hello, Alice!
+
+$ myapp greet --help
+Print a greeting.
+
+USAGE:
+  greet [options] <count>
+
+ARGUMENTS:
+  <count>  Number of greetings
+
+OPTIONS:
+  --name, -n  Your name
+  --help, -h  Show help and exit.
+```
+
+## Core concepts
+
+### ICommand
+
+A leaf node that performs work. Implement `ExecuteAsync` and return an integer
+exit code.
+
+```csharp
+sealed class DeployCommand : ICommand
+{
+    private static readonly Option<string> _env =
+        new("--env", "-e", "Target environment", isRequired: true);
+
+    public string Name => "deploy";
+    public string Description => "Deploy the application.";
+    public IReadOnlyList<IOption> Options => [_env];
+    public IReadOnlyList<IArgument> Arguments => [];
+
+    public async Task<int> ExecuteAsync(ICommandContext ctx, CancellationToken ct = default)
+    {
+        var env = ctx.GetOption(_env)!;
+        Console.WriteLine($"Deploying to {env}…");
+        return 0;
+    }
+}
+```
+
+### Branch
+
+Groups related subcommands. Use the built-in `Branch` class for declarative
+trees, or implement `IBranch` for custom behaviour.
+
+```csharp
+var root = new Branch("myapp", "My CLI tool", [
+    new Branch("remote", "Manage remotes", [
+        new AddRemoteCommand(),
+        new RemoveRemoteCommand(),
+    ]),
+    new DeployCommand(),
+]);
+
+return await new Application(root).RunAsync(args);
+```
+
+### Options
+
+`Option<T>` supports `string`, `int`, `double`, `bool`, and any `enum` out of
+the box.
+
+```csharp
+// Long name only, optional
+var verbose = new Option<bool>("--verbose", "Enable verbose output");
+
+// Long + short alias, required
+var output = new Option<string>("--output", "-o", "Output path", isRequired: true);
+
+// Optional with explicit default
+var retries = new Option<int>("--retries", "Retry count", isRequired: false, defaultValue: 3);
+```
+
+Bool options are **flags** — supply the name alone to set them to `true`:
+
+```text
+myapp build --verbose
+```
+
+### Arguments
+
+`Argument<T>` captures positional values in declaration order.
+
+```csharp
+// Required positional argument
+var source = new Argument<string>("<source>", "Source path");
+
+// Optional positional argument with default
+var dest = new Argument<string>("<dest>", "Destination path", defaultValue: ".");
+```
+
+### ICommandContext
+
+Inside `ExecuteAsync`, use `ICommandContext` for type-safe access to parsed
+values.
+
+```csharp
+var name  = ctx.GetOption(nameOpt);       // T? — null when not supplied and no default
+var file  = ctx.GetArgument(fileArg);     // T?
+var extra = ctx.RemainingArgs;            // string[] — tokens after --
+var token = ctx.CancellationToken;
+```
+
+### Inherited options
+
+Options declared on a branch are available to all subcommands:
+
+```csharp
+var verbose = new Option<bool>("--verbose", "Enable verbose output");
+
+var root = new Branch("myapp", "My CLI", [verbose], [
+    new BuildCommand(),   // can read --verbose
+    new DeployCommand(),  // can read --verbose
+]);
+```
+
+### Application
+
+`Application` wraps the root node, injects `--help`, and handles exit codes.
+
+```csharp
+// Minimal — uses ConsoleHelpRenderer, writes errors to Console.Error
+new Application(root)
+
+// Custom renderer
+new Application(root, new MyHelpRenderer())
+
+// Custom renderer + redirect errors (useful in tests)
+new Application(root, new ConsoleHelpRenderer(), myTextWriter)
+```
+
+`RunAsync` returns:
+
+| Code | Meaning                                                 |
+| ---- | ------------------------------------------------------- |
+| `0`  | Success                                                 |
+| `1`  | Unhandled exception thrown by a command                 |
+| `2`  | Parse error (unknown option, missing required value, …) |
+
+## Project structure
+
+```text
+src/
+  SergeiM.Cli/
+    Abstractions/       INode, ICommand, IBranch, IOption<T>, IArgument<T>,
+                        ICommandContext, IHelpRenderer, IParser, IApplication,
+                        ParseResult, ParseError
+    Options/            Option<T>
+    Arguments/          Argument<T>
+    Parsing/            Token, Tokenizer, Parser
+    Branch.cs
+    CommandContext.cs
+    ConsoleHelpRenderer.cs
+    WithHelp.cs
+    Application.cs
+  SergeiM.Cli.Tests/
+```
+
+## License
+
+See [LICENSE.txt](LICENSE.txt).
