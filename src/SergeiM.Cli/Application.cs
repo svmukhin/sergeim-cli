@@ -2,20 +2,23 @@
 // SPDX-License-Identifier: MIT
 
 using SergeiM.Cli.Abstractions;
+using SergeiM.Cli.Options;
 using SergeiM.Cli.Parsing;
 
 namespace SergeiM.Cli;
 
 /// <summary>
 /// Default <see cref="IApplication"/> implementation.
-/// Wraps the root node in a <see cref="WithHelp"/> decorator, parses the supplied arguments,
-/// then executes the matched command or prints an error summary.
+/// Wraps the root node in a decorator chain, parses the supplied arguments,
+/// then executes the matched command with help rendering and error handling.
 /// </summary>
 public sealed class Application : IApplication
 {
-    private readonly WithHelp _root;
+    private readonly WithHelpOption _parseRoot;
+    private readonly IHelpRenderer _renderer;
     private readonly IParser _parser;
     private readonly TextWriter _errorOutput;
+    private readonly IOption<bool> _helpOption;
 
     /// <summary>
     /// Initializes a new application with a custom help renderer and error output writer.
@@ -25,7 +28,9 @@ public sealed class Application : IApplication
     /// <param name="errorOutput">Writer for parse-error messages.</param>
     public Application(INode root, IHelpRenderer helpRenderer, TextWriter errorOutput)
     {
-        _root = new WithHelp(root, helpRenderer);
+        _helpOption = new HelpOptionDescriptor();
+        _parseRoot = new WithHelpOption(root, _helpOption);
+        _renderer = helpRenderer;
         _parser = new Parser();
         _errorOutput = errorOutput;
     }
@@ -55,28 +60,19 @@ public sealed class Application : IApplication
         ParseResult result;
         try
         {
-            result = _parser.Parse(_root, args);
+            result = _parser.Parse(_parseRoot, args);
         }
         catch (Exception ex)
         {
             await _errorOutput.WriteLineAsync(ex.Message);
             return 1;
         }
-        if (result.Errors.Count > 0)
-        {
-            foreach (var error in result.Errors)
-                await _errorOutput.WriteLineAsync(error.Message);
-            return 2;
-        }
-        if (result.MatchedCommand == null)
-        {
-            var ctx = new CommandContext(result, ct);
-            return await _root.ExecuteAsync(ctx, ct);
-        }
+        INode nodeToExecute = result.MatchedCommand ?? _parseRoot;
+        var executor = new WithHelpRenderer(new WithErrorHandling(nodeToExecute, _errorOutput), _renderer, _helpOption);
         try
         {
             var ctx = new CommandContext(result, ct);
-            return await result.MatchedCommand.ExecuteAsync(ctx, ct);
+            return await executor.ExecuteAsync(ctx, ct);
         }
         catch (Exception ex)
         {
