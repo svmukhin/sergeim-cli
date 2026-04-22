@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 using SergeiM.Cli.Abstractions;
+using SergeiM.Cli.Arguments;
 using SergeiM.Cli.Options;
 
 namespace SergeiM.Cli.Tests;
@@ -196,5 +197,89 @@ public class ApplicationTests
             ReceivedToken = ct;
             return Task.FromResult(0);
         }
+    }
+
+    private sealed class RequiredArgCommand : ICommand
+    {
+        public string Name { get; }
+        public string Description => string.Empty;
+        public IReadOnlyList<IOption> Options => [];
+        public IReadOnlyList<IArgument> Arguments { get; }
+        public RequiredArgCommand(string name)
+        {
+            Name = name;
+            Arguments = [new Argument<string>("<file>", "File")];
+        }
+        public Task<int> ExecuteAsync(ICommandContext ctx, CancellationToken ct = default)
+            => Task.FromResult(0);
+    }
+
+    [TestMethod]
+    public void RunAsync_SubcommandHelpFlag_ReturnsZero()
+    {
+        var renderer = new SpyRenderer();
+        var errors = new StringWriter();
+        var branch = new StubBranch("git", [new OkCommand("add")]);
+        var app = new Application(branch, renderer, errors);
+        var prev = Console.Out;
+        Console.SetOut(new StringWriter());
+        var code = app.RunAsync(["add", "--help"]).GetAwaiter().GetResult();
+        Console.SetOut(prev);
+        Assert.AreEqual(0, code);
+    }
+
+    [TestMethod]
+    public void RunAsync_SubcommandHelpFlag_RendererCalled()
+    {
+        var renderer = new SpyRenderer();
+        var errors = new StringWriter();
+        var branch = new StubBranch("git", [new OkCommand("add")]);
+        var app = new Application(branch, renderer, errors);
+        var prev = Console.Out;
+        Console.SetOut(new StringWriter());
+        app.RunAsync(["add", "--help"]).GetAwaiter().GetResult();
+        Console.SetOut(prev);
+        Assert.AreEqual(1, renderer.CallCount);
+    }
+
+    [TestMethod]
+    public void RunAsync_RequiredArgMissing_HelpFlag_ReturnsZero()
+    {
+        var renderer = new SpyRenderer();
+        var errors = new StringWriter();
+        var app = new Application(new RequiredArgCommand("run"), renderer, errors);
+        var prev = Console.Out;
+        Console.SetOut(new StringWriter());
+        var code = app.RunAsync(["--help"]).GetAwaiter().GetResult();
+        Console.SetOut(prev);
+        Assert.AreEqual(0, code);
+    }
+
+    [TestMethod]
+    public void RunAsync_RequiredArgMissing_HelpFlag_RendererCalled()
+    {
+        var renderer = new SpyRenderer();
+        var errors = new StringWriter();
+        var app = new Application(new RequiredArgCommand("run"), renderer, errors);
+        var prev = Console.Out;
+        Console.SetOut(new StringWriter());
+        app.RunAsync(["--help"]).GetAwaiter().GetResult();
+        Console.SetOut(prev);
+        Assert.AreEqual(1, renderer.CallCount);
+    }
+
+    [TestMethod]
+    public void RunAsync_RequiredArgMissing_NoHelpFlag_ReturnsTwo()
+    {
+        var (app, _) = Make(new RequiredArgCommand("run"));
+        Assert.AreEqual(2, Run(app, []));
+    }
+
+    [TestMethod]
+    public void RunAsync_RequiredArgMissing_NoHelpFlag_ErrorWritten()
+    {
+        var (app, errors) = Make(new RequiredArgCommand("run"));
+        Run(app, []);
+        Assert.IsFalse(string.IsNullOrWhiteSpace(errors.ToString()));
     }
 }
