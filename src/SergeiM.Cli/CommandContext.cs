@@ -30,6 +30,9 @@ public sealed class CommandContext : ICommandContext
     public string[] RemainingArgs => _result.RemainingArgs;
 
     /// <inheritdoc/>
+    public IReadOnlyList<ParseError> Errors => _result.Errors;
+
+    /// <inheritdoc/>
     public T? GetOption<T>(IOption<T> option)
     {
         if (_result.OptionValues.TryGetValue(option, out var raw))

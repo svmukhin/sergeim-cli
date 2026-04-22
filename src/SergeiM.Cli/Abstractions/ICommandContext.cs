@@ -14,6 +14,9 @@ public interface ICommandContext
     /// <summary>Gets all command-line tokens that were not consumed by any option or argument.</summary>
     string[] RemainingArgs { get; }
 
+    /// <summary>Gets the parse errors collected during argument parsing; empty when parsing succeeded.</summary>
+    IReadOnlyList<ParseError> Errors { get; }
+
     /// <summary>
     /// Returns the parsed value for <paramref name="option"/>,
     /// or <c>default(T)</c> when the option was not supplied.
