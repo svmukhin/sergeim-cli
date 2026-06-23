@@ -10,7 +10,7 @@ SPDX-PackageDownloadLocation = "https://github.com/svmukhin/sergeim-cli"
 path = [
   ".gitignore",
   ".markdownlint-cli2.yaml",
-  ".release-please-config.json",
+  "release-please-config.json",
   ".release-please-manifest.json",
   "**.md",
   "**/*.props",
