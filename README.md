@@ -173,6 +173,20 @@ Bool options are **flags** — supply the name alone to set them to `true`:
 myapp build --verbose
 ```
 
+Options are matched by **name**, not by reference. Two `Option<string>`
+instances with the same `Name` resolve to the same parsed value, so you can
+declare a descriptor once and reuse it across commands:
+
+```csharp
+static readonly Option<string> Url = new("--url", "API URL");
+
+class ExportCommand : ICommand
+{
+    public IReadOnlyList<IOption> Options => [Url];
+    // ctx.GetOption(Url) works regardless of where Url was declared
+}
+```
+
 ### Arguments
 
 `Argument<T>` captures positional values in declaration order.

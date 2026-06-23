@@ -120,7 +120,7 @@ public class ParserTests
         var result = Parser.Parse(root, ["run", "--verbose"]);
         Assert.AreEqual(0, result.Errors.Count);
         Assert.IsTrue(result.OptionValues.ContainsKey(childVerbose));
-        Assert.IsFalse(result.OptionValues.ContainsKey(parentVerbose));
+        Assert.IsTrue(result.OptionValues.ContainsKey(parentVerbose));
     }
 
     [TestMethod]
@@ -197,6 +197,18 @@ public class ParserTests
         var remoteBranch = new Branch("remote", "Manage remotes", [addCmd]);
         var result = Parser.Parse(remoteBranch, ["add"]);
         Assert.AreSame(addCmd, result.ReachedNode);
+    }
+
+    [TestMethod]
+    public void Parse_SeparateOptionInstances_SameName_FoundByEitherInstance()
+    {
+        var url1 = new Option<string>("--url", "URL");
+        var url2 = new Option<string>("--url", "URL");
+        var cmd = Cmd("run", [url1]);
+        var result = Parser.Parse(cmd, ["--url", "http://api"]);
+        Assert.AreEqual(0, result.Errors.Count);
+        Assert.AreEqual("http://api", result.OptionValues[url1]);
+        Assert.AreEqual("http://api", result.OptionValues[url2]);
     }
 
     [TestMethod]
