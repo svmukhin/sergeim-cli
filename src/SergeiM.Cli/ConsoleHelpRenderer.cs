@@ -30,7 +30,7 @@ public sealed class ConsoleHelpRenderer : IHelpRenderer
     private static void RenderUsage(INode node, TextWriter output)
     {
         var sb = new StringBuilder("  ").Append(node.Name);
-        if (node is IBranch)
+        if (node is IBranch branch && branch.Subcommands.Count > 0)
             sb.Append(" <subcommand>");
         if (node.Options.Count > 0)
             sb.Append(" [options]");
