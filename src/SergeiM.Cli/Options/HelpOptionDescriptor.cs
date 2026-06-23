@@ -36,4 +36,13 @@ internal sealed class HelpOptionDescriptor : IOption<bool>
 
     /// <inheritdoc/>
     public object? DefaultValue => false;
+
+    /// <inheritdoc/>
+    public bool HasDefaultFactory => false;
+
+    /// <inheritdoc/>
+    public Func<object?>? DefaultFactory => null;
+
+    /// <inheritdoc/>
+    public Func<bool>? TypedDefaultFactory => null;
 }

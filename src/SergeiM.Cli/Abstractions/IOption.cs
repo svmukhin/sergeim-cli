@@ -35,6 +35,15 @@ public interface IOption
     /// or <see langword="null"/> when no default is defined (i.e. <see cref="HasDefault"/> is <see langword="false"/>).
     /// </summary>
     object? DefaultValue { get; }
+
+    /// <summary>Gets a value indicating whether a factory callback has been defined for this option's default value.</summary>
+    bool HasDefaultFactory { get; }
+
+    /// <summary>
+    /// Gets the untyped factory callback that produces a default value when the option is not supplied,
+    /// or <see langword="null"/> when no factory is defined.
+    /// </summary>
+    Func<object?>? DefaultFactory { get; }
 }
 
 /// <summary>
@@ -48,4 +57,10 @@ public interface IOption<T> : IOption
     /// or <c>default(T)</c> when no default is defined.
     /// </summary>
     T? Default { get; }
+
+    /// <summary>
+    /// Gets the typed factory callback that produces a default value when the option is not supplied,
+    /// or <see langword="null"/> when no factory is defined.
+    /// </summary>
+    Func<T?>? TypedDefaultFactory { get; }
 }
