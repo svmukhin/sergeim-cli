@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/svmukhin/sergeim-cli/compare/v0.2.0...v0.3.0) (2026-06-23)
+
+
+### Features
+
+* **#18:** switch to NuGet trusted publishing (OIDC, keyless) ([9eb37c4](https://github.com/svmukhin/sergeim-cli/commit/9eb37c4b723951d7bf060c797bfd9ed89eaa22df))
+
 ## [0.2.0](https://github.com/svmukhin/sergeim-cli/compare/0.1.1...v0.2.0) (2026-06-23)
 
 
