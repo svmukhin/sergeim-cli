@@ -65,8 +65,8 @@ public sealed class Parser : IParser
         Token[] tokens,
         HashSet<int> subcmdIndices)
     {
-        var optionValues = new Dictionary<IOption, object?>();
-        var argumentValues = new Dictionary<IArgument, object?>();
+        var optionValues = new Dictionary<IOption, object?>(OptionKeyComparer.Instance);
+        var argumentValues = new Dictionary<IArgument, object?>(ArgumentKeyComparer.Instance);
         var errors = new List<ParseError>();
         var remaining = new List<string>();
         var command = currentNode as ICommand;
