@@ -80,7 +80,8 @@ OPTIONS:
 ### ICommand
 
 A leaf node that performs work. Implement `ExecuteAsync` and return an integer
-exit code.
+exit code. For synchronous logic, extend `SyncCommand` instead — it only
+requires an `Execute` method.
 
 ```csharp
 sealed class DeployCommand : ICommand
@@ -101,6 +102,28 @@ sealed class DeployCommand : ICommand
     }
 }
 ```
+
+### SyncCommand
+
+Base class for commands without async I/O. Override `Execute` and return an
+exit code — no `Task.FromResult` boilerplate.
+
+```csharp
+sealed class VersionCommand : SyncCommand
+{
+    public override string Name => "version";
+    public override string Description => "Print version.";
+    public override IReadOnlyList<IOption> Options => [];
+
+    public override int Execute(ICommandContext ctx)
+    {
+        Console.WriteLine("1.0.0");
+        return 0;
+    }
+}
+```
+
+`Arguments` defaults to `[]` and can be overridden when needed.
 
 ### Branch
 
