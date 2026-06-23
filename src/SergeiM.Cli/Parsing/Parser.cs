@@ -123,8 +123,9 @@ public sealed class Parser : IParser
                 errors.Add(new ParseError($"Option {opt.Name} requires a value."));
             }
         }
-        ValidateRequired(effectiveOptions, command, optionValues, argumentValues, errors);
         FillDefaults(effectiveOptions, command, optionValues, argumentValues);
+        FillFromFactories(effectiveOptions, command, optionValues, argumentValues);
+        ValidateRequired(effectiveOptions, command, optionValues, argumentValues, errors);
         return new ParseResult(currentNode, command, optionValues, argumentValues, [.. remaining], errors);
     }
 
@@ -172,6 +173,27 @@ public sealed class Parser : IParser
         {
             if (!argumentValues.ContainsKey(arg) && arg.HasDefault)
                 argumentValues[arg] = arg.DefaultValue;
+        }
+    }
+
+    /// <summary>
+    /// Populates <paramref name="optionValues"/> by invoking factory callbacks for any
+    /// options that were not explicitly supplied and whose factory returns a non-null value.
+    /// </summary>
+    private static void FillFromFactories(
+        List<IOption> effectiveOptions,
+        ICommand? command,
+        Dictionary<IOption, object?> optionValues,
+        Dictionary<IArgument, object?> argumentValues)
+    {
+        foreach (var opt in effectiveOptions)
+        {
+            if (!optionValues.ContainsKey(opt) && opt.HasDefaultFactory)
+            {
+                var value = opt.DefaultFactory!();
+                if (value != null)
+                    optionValues[opt] = value;
+            }
         }
     }
 

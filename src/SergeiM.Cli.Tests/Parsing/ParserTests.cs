@@ -199,6 +199,66 @@ public class ParserTests
         Assert.AreSame(addCmd, result.ReachedNode);
     }
 
+    [TestMethod]
+    public void Parse_OptionWithFactory_FactoryReturnsValueWhenNotSupplied()
+    {
+        var urlOpt = new Option<string>("--url", "URL", false,
+            defaultFactory: () => "http://api");
+        var cmd = Cmd("run", [urlOpt]);
+        var result = Parser.Parse(cmd, []);
+        Assert.AreEqual(0, result.Errors.Count);
+        Assert.IsTrue(result.OptionValues.ContainsKey(urlOpt));
+        Assert.AreEqual("http://api", result.OptionValues[urlOpt]);
+    }
+
+    [TestMethod]
+    public void Parse_OptionWithFactory_ExplicitArgWinsOverFactory()
+    {
+        var urlOpt = new Option<string>("--url", "URL", false,
+            defaultFactory: () => "http://api");
+        var cmd = Cmd("run", [urlOpt]);
+        var result = Parser.Parse(cmd, ["--url", "http://custom"]);
+        Assert.AreEqual(0, result.Errors.Count);
+        Assert.AreEqual("http://custom", result.OptionValues[urlOpt]);
+    }
+
+    [TestMethod]
+    public void Parse_RequiredOptionWithFactory_FactoryReturnsNull_ProducesError()
+    {
+        var urlOpt = new Option<string>("--url", "URL", isRequired: true,
+            defaultFactory: () => null!);
+        var cmd = Cmd("run", [urlOpt]);
+        var result = Parser.Parse(cmd, []);
+        Assert.AreEqual(1, result.Errors.Count);
+        StringAssert.Contains(result.Errors[0].Message, "--url");
+    }
+
+    [TestMethod]
+    public void Parse_OptionWithStaticDefaultAndFactory_StaticDefaultWins()
+    {
+        var opt = new StubOptionWithBothDefaults();
+        var cmd = Cmd("run", [opt]);
+        var result = Parser.Parse(cmd, []);
+        Assert.AreEqual(0, result.Errors.Count);
+        Assert.IsTrue(result.OptionValues.ContainsKey(opt));
+        Assert.AreEqual("static-default", result.OptionValues[opt]);
+    }
+
+    private sealed class StubOptionWithBothDefaults : IOption<string>
+    {
+        public string Name => "--url";
+        public string? ShortName => null;
+        public string Description => "URL";
+        public Type ValueType => typeof(string);
+        public bool IsRequired => false;
+        public bool HasDefault => true;
+        public object? DefaultValue => "static-default";
+        public string? Default => "static-default";
+        public bool HasDefaultFactory => true;
+        public Func<object?>? DefaultFactory => () => "factory-value";
+        public Func<string?>? TypedDefaultFactory => () => "factory-value";
+    }
+
     private sealed class StubCommand : ICommand
     {
         public StubCommand(string name, IReadOnlyList<IOption>? options, IReadOnlyList<IArgument>? arguments)

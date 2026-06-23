@@ -133,8 +133,17 @@ var output = new Option<string>("--output", "-o", "Output path", isRequired: tru
 
 // Optional with explicit default
 var retries = new Option<int>("--retries", "Retry count", isRequired: false, defaultValue: 3);
+
+// Required, but falls back to an environment variable via factory callback
+var url = new Option<string>("--url", "API URL",
+    defaultFactory: () => Environment.GetEnvironmentVariable("API_URL"),
+    isRequired: true);
 ```
 
+When the option is not supplied on the command line, values are resolved
+with this cascade: **explicit arg → static default → factory() →
+required check**. If the factory returns `null`, the value is treated as
+missing.
 Bool options are **flags** — supply the name alone to set them to `true`:
 
 ```text

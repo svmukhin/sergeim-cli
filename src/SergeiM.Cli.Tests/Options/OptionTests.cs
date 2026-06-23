@@ -68,4 +68,35 @@ public class OptionTests
         Assert.AreEqual(typeof(bool), new Option<bool>("--v", "V").ValueType);
         Assert.AreEqual(typeof(double), new Option<double>("--d", "D").ValueType);
     }
+
+    [TestMethod]
+    public void Constructor_WithDefaultFactory_SetsProperties()
+    {
+        var option = new Option<string>("--url", "URL", isRequired: true,
+            defaultFactory: () => "http://api");
+        Assert.AreEqual("--url", option.Name);
+        Assert.IsNull(option.ShortName);
+        Assert.AreEqual("URL", option.Description);
+        Assert.IsTrue(option.IsRequired);
+        Assert.IsTrue(option.HasDefaultFactory);
+        Assert.IsFalse(option.HasDefault);
+        Assert.IsNull(option.Default);
+        Assert.IsNull(option.DefaultValue);
+        Assert.IsNotNull(option.TypedDefaultFactory);
+        Assert.AreEqual("http://api", option.TypedDefaultFactory!());
+        Assert.IsNotNull(option.DefaultFactory);
+        Assert.AreEqual("http://api", option.DefaultFactory!());
+    }
+
+    [TestMethod]
+    public void Constructor_WithShortNameAndDefaultFactory_SetsProperties()
+    {
+        var option = new Option<int>("--count", "-c", "Count", isRequired: false,
+            defaultFactory: () => 42);
+        Assert.AreEqual("--count", option.Name);
+        Assert.AreEqual("-c", option.ShortName);
+        Assert.IsTrue(option.HasDefaultFactory);
+        Assert.IsFalse(option.HasDefault);
+        Assert.AreEqual(42, option.TypedDefaultFactory!());
+    }
 }
