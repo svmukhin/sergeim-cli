@@ -141,6 +141,15 @@ public class ConsoleHelpRendererTests
     }
 
     [TestMethod]
+    public void Render_Branch_NoSubcommands_UsageContainsNoSubcommandPlaceholder()
+    {
+        var branch = new StubBranch("export", "Export data", subcommands: []);
+        var output = Render(branch);
+        Assert.IsFalse(output.Contains("<subcommand>"));
+        Assert.IsTrue(output.Contains("  export"));
+    }
+
+    [TestMethod]
     public void Render_Command_WithArguments_ArgumentsSectionPresent()
     {
         var arg = new Argument<string>("<file>", "Input file");
