@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.1](https://github.com/svmukhin/sergeim-cli/compare/v0.3.0...v0.3.1) (2026-06-24)
+
+
+### Miscellaneous
+
+* **#14:** fix version prefix in PackageReleaseNotes link ([06ec404](https://github.com/svmukhin/sergeim-cli/commit/06ec404b74454eebf85f9b42abbe1090674d47ff))
+
 ## [0.3.0](https://github.com/svmukhin/sergeim-cli/compare/v0.2.0...v0.3.0) (2026-06-23)
 
 
